@@ -18,9 +18,9 @@ jobs:
       with:
         flutter-version: '3.22.0'
         
-    - name: Create Proper Flutter Project
+    - name: Create Flutter Project with Backup
       run: |
-        echo "🔄 Creating proper Flutter project structure..."
+        echo "🔄 Creating Flutter project with proper backup..."
         
         # Project name extract karein
         PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
@@ -28,22 +28,35 @@ jobs:
           PROJECT_NAME="minar_ilm_app"
         fi
         
-        # Temporary directory mein proper project banayein
-        mkdir -p /tmp/flutter_fix
-        cd /tmp/flutter_fix
+        # Code backup karein
+        echo "📦 Backing up your code..."
+        mkdir -p /tmp/app_backup
+        cp -r lib /tmp/app_backup/ 2>/dev/null || true
+        cp pubspec.yaml /tmp/app_backup/ 2>/dev/null || true
+        cp README.md /tmp/app_backup/ 2>/dev/null || true
+        
+        # Clean directory (lib ko chore kar)
+        echo "🧹 Cleaning directory..."
+        find . -mindepth 1 -maxdepth 1 \
+          -name '.github' -prune \
+          -o -name 'lib' -prune \
+          -o -exec rm -rf {} +
         
         # Naya Flutter project banayein
-        flutter create --org com.minarilm --project-name $PROJECT_NAME new_project
+        echo "🚀 Creating new Flutter project..."
+        flutter create --org com.minarilm --project-name $PROJECT_NAME .
         
-        # Original code copy karein
-        cp -r $GITHUB_WORKSPACE/lib new_project/
-        cp $GITHUB_WORKSPACE/pubspec.yaml new_project/
-        cp $GITHUB_WORKSPACE/README.md new_project/ 2>/dev/null || true
+        # Apna code restore karein
+        echo "📂 Restoring your code..."
+        if [ -d "/tmp/app_backup/lib" ]; then
+          rm -rf lib/*
+          cp -r /tmp/app_backup/lib/* lib/
+        fi
+        if [ -f "/tmp/app_backup/pubspec.yaml" ]; then
+          cp /tmp/app_backup/pubspec.yaml .
+        fi
         
-        # Project ko workspace mein move karein
-        cd new_project
-        shopt -s dotglob
-        mv * $GITHUB_WORKSPACE/
+        echo "✅ Project structure fixed successfully!"
         
     - name: Install Dependencies
       run: flutter pub get
@@ -58,8 +71,8 @@ jobs:
         path: build/app/outputs/flutter-apk/app-release.apk
         retention-days: 30
         
-    - name: Verify APK
+    - name: Show Success
       run: |
-        echo "✅ APK built successfully!"
-        echo "📱 APK Location: build/app/outputs/flutter-apk/app-release.apk"
-        echo "📦 APK Size: $(du -h build/app/outputs/flutter-apk/app-release.apk | cut -f1)"
+        echo "🎉 APK built successfully!"
+        echo "📱 Your Minar Ilm App is ready!"
+        echo "📦 Download from Artifacts section"
