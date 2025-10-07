@@ -18,11 +18,6 @@ jobs:
       with:
         flutter-version: '3.22.0'
         
-    - name: Fix Flutter Project Structure
-      run: |
-        echo "🔧 Fixing Flutter project structure..."
-        flutter create --org com.minarilm --project-name shoaib_minar_ilm_app --overwrite .
-        
     - name: Install Dependencies
       run: flutter pub get
       
