@@ -18,6 +18,33 @@ jobs:
       with:
         flutter-version: '3.22.0'
         
+    - name: Create Proper Flutter Project
+      run: |
+        echo "🔄 Creating proper Flutter project structure..."
+        
+        # Project name extract karein
+        PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
+        if [ -z "$PROJECT_NAME" ]; then
+          PROJECT_NAME="minar_ilm_app"
+        fi
+        
+        # Temporary directory mein proper project banayein
+        mkdir -p /tmp/flutter_fix
+        cd /tmp/flutter_fix
+        
+        # Naya Flutter project banayein
+        flutter create --org com.minarilm --project-name $PROJECT_NAME new_project
+        
+        # Original code copy karein
+        cp -r $GITHUB_WORKSPACE/lib new_project/
+        cp $GITHUB_WORKSPACE/pubspec.yaml new_project/
+        cp $GITHUB_WORKSPACE/README.md new_project/ 2>/dev/null || true
+        
+        # Project ko workspace mein move karein
+        cd new_project
+        shopt -s dotglob
+        mv * $GITHUB_WORKSPACE/
+        
     - name: Install Dependencies
       run: flutter pub get
       
@@ -30,3 +57,9 @@ jobs:
         name: minar-ilm-app
         path: build/app/outputs/flutter-apk/app-release.apk
         retention-days: 30
+        
+    - name: Verify APK
+      run: |
+        echo "✅ APK built successfully!"
+        echo "📱 APK Location: build/app/outputs/flutter-apk/app-release.apk"
+        echo "📦 APK Size: $(du -h build/app/outputs/flutter-apk/app-release.apk | cut -f1)"
